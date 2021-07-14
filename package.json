@@ -230,7 +230,8 @@
         "KEEP_AVAUDIOSESSION_ALWAYS_ACTIVE": "NO"
       },
       "cordova.plugins.diagnostic": {},
-      "cordova-plugin-echo": {}
+      "cordova-plugin-echo": {},
+      "com.orange": {}
     }
   },
   "main": "desktop/electron.js",

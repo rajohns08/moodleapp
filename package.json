@@ -28,6 +28,7 @@
     "dev": "ionic serve",
     "dev:android": "ionic cordova run android --livereload",
     "dev:ios": "ionic cordova run ios --livereload",
+    "dev:ios": "ionic cordova run ios --livereload --external",
     "prod:android": "ionic cordova run android --aot",
     "prod:ios": "ionic cordova run ios --aot",
     "setup": "npm install && npx cordova prepare && npx gulp",

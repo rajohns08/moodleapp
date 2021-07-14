@@ -141,6 +141,7 @@
     "@types/promise.prototype.finally": "^2.0.4",
     "acorn": "^5.7.4",
     "cordova-plugin-add-swift-support": "^2.0.2",
+    "cordova-plugin-echo": "^1.0.0",
     "cordova-plugin-geolocation": "git+https://github.com/apache/cordova-plugin-geolocation.git#89cf51d222e8f225bdfb661965b3007d669c40ff",
     "cordova-plugin-inappbrowser": "git+https://github.com/moodlemobile/cordova-plugin-inappbrowser.git#moodle",
     "cordova-plugin-ionic-webview": "git+https://github.com/moodlemobile/cordova-plugin-ionic-webview.git#500-moodle",

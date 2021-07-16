@@ -211,12 +211,6 @@ export class CoreLoginSitePage {
             return;
         }
 
-        if (!this.appProvider.isOnline()) {
-            this.domUtils.showErrorModal('core.networkerrormsg', true);
-
-            return;
-        }
-
         url = url.trim();
 
         if (url.match(/^(https?:\/\/)?campus\.example\.edu/)) {

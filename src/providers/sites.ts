@@ -496,8 +496,6 @@ export class CoreSitesProvider {
 
         if (!this.urlUtils.isHttpURL(siteUrl)) {
             return Promise.reject(this.translate.instant('core.login.invalidsite'));
-        } else if (!this.appProvider.isOnline()) {
-            return Promise.reject(this.translate.instant('core.networkerrormsg'));
         } else {
             return this.checkSiteWithProtocol(siteUrl, protocol).catch((error) => {
                 // Do not continue checking if a critical error happened.

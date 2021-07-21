@@ -205,7 +205,7 @@ export class CoreLoginReconnectPage {
                     this.cancel();
                 });
             } else {
-                // TODO: ON CREDENTIALS INVALID, FIND INVALID CREDENTIALS MESSAGE AND SHOW IT
+                this.domUtils.showErrorModal('addon.mod_lesson.loginfail', true);
             }
         } else {
             const modal = this.domUtils.showModalLoading();
@@ -271,6 +271,6 @@ export class CoreLoginReconnectPage {
     offlineCredentialsValid(username: string, password: string): boolean {
         // TODO: HASH THE SAME WAY THE HASH HAPPENED BEFORE STORAGE
         // TODO: VERIFY CREDENTIALS WITH WHATEVER STORED FROM LAST LOGIN SUCCESS
-        return true;
+        return false;
     }
 }

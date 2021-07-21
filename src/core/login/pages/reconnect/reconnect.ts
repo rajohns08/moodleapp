@@ -185,24 +185,13 @@ export class CoreLoginReconnectPage {
         }
 
         if (!this.appProvider.isOnline()) {
-            this.domUtils.showErrorModal('core.networkerrormsg', true);
-
-            return;
-        }
-
-        const modal = this.domUtils.showModalLoading();
-
-        // Start the authentication process.
-        this.sitesProvider.getUserToken(siteUrl, username, password).then((data) => {
-            return this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, data.token, data.privateToken).then(() => {
-
-                this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
-
-                // Update site info too because functions might have changed (e.g. unisntall local_mobile).
-                return this.sitesProvider.updateSiteInfoByUrl(this.infoSiteUrl, username).then(() => {
+            if (this.offlineCredentialsValid(username, password)) {
+                this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, "offline_token", null).then(() => {
+                    this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
+    
                     // Reset fields so the data is not in the view anymore.
                     this.credForm.controls['password'].reset();
-
+    
                     // Go to the site initial page.
                     return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
                 }).catch((error) => {
@@ -211,23 +200,54 @@ export class CoreLoginReconnectPage {
                     } else {
                         this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
                     }
-
+    
                     // Error, go back to login page.
                     this.cancel();
                 });
-            });
-        }).catch((error) => {
-            this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-
-            if (error.loggedout) {
-                this.cancel();
-            } else if (error.errorcode == 'forcepasswordchangenotice') {
-                // Reset password field.
-                this.credForm.controls.password.reset();
+            } else {
+                // TODO: ON CREDENTIALS INVALID, FIND INVALID CREDENTIALS MESSAGE AND SHOW IT
             }
-        }).finally(() => {
-            modal.dismiss();
-        });
+        } else {
+            const modal = this.domUtils.showModalLoading();
+
+            // Start the authentication process.
+            this.sitesProvider.getUserToken(siteUrl, username, password).then((data) => {
+                return this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, data.token, data.privateToken).then(() => {
+    
+                    this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
+    
+                    // Update site info too because functions might have changed (e.g. unisntall local_mobile).
+                    return this.sitesProvider.updateSiteInfoByUrl(this.infoSiteUrl, username).then(() => {
+                        // Reset fields so the data is not in the view anymore.
+                        this.credForm.controls['password'].reset();
+    
+                        // Go to the site initial page.
+                        return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
+                    }).catch((error) => {
+                        if (error.loggedout) {
+                            this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
+                        } else {
+                            this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
+                        }
+    
+                        // Error, go back to login page.
+                        this.cancel();
+                    });
+                });
+            }).catch((error) => {
+                this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
+    
+                if (error.loggedout) {
+                    this.cancel();
+                } else if (error.errorcode == 'forcepasswordchangenotice') {
+                    // Reset password field.
+                    this.credForm.controls.password.reset();
+                }
+            }).finally(() => {
+                modal.dismiss();
+            });
+        }
+
     }
 
     /**
@@ -246,5 +266,11 @@ export class CoreLoginReconnectPage {
         if (!this.loginHelper.openBrowserForOAuthLogin(this.siteUrl, provider, this.siteConfig.launchurl)) {
             this.domUtils.showErrorModal('Invalid data.');
         }
+    }
+
+    offlineCredentialsValid(username: string, password: string): boolean {
+        // TODO: HASH THE SAME WAY THE HASH HAPPENED BEFORE STORAGE
+        // TODO: VERIFY CREDENTIALS WITH WHATEVER STORED FROM LAST LOGIN SUCCESS
+        return true;
     }
 }

@@ -252,14 +252,7 @@ export class CoreLoginCredentialsPage implements OnDestroy {
         }
 
         if (!this.appProvider.isOnline()) {
-
-            // TODO: HANDLE CASE OF NO CREDENTIALS STORED
-            
-            if (this.offlineCredentialsValid(username, password)) {
-                // TODO: ON CREDENTIALS VALIDATED, CONTINUE AS NORMAL LOGIN SUCCESS
-            } else {
-                // TODO: ON CREDENTIALS INVALID, FIND INVALID CREDENTIALS MESSAGE AND SHOW IT
-            }
+            this.domUtils.showErrorModal('core.networkerrormsg', true);
 
             return;
         }
@@ -290,12 +283,6 @@ export class CoreLoginCredentialsPage implements OnDestroy {
 
             this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
         });
-    }
-
-    offlineCredentialsValid(username: string, password: string): boolean {
-        // TODO: HASH THE SAME WAY THE HASH HAPPENED BEFORE STORAGE
-        // TODO: VERIFY CREDENTIALS WITH WHATEVER STORED FROM LAST LOGIN SUCCESS
-        return true;
     }
 
     /**

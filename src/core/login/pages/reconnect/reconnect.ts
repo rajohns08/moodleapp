@@ -272,10 +272,15 @@ export class CoreLoginReconnectPage {
     }
 
     async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
-        const storedHashedCredentials = await this.appProvider.getHashedCredentials(this.siteId);
-        const enteredHashedCredentials = this.hashCredentials(username, password);
+        try {
+            const storedHashedCredentials = await this.appProvider.getHashedCredentials(this.siteId);
+            const enteredHashedCredentials = this.hashCredentials(username, password);
 
-        return storedHashedCredentials === enteredHashedCredentials;
+            return storedHashedCredentials === enteredHashedCredentials;
+        } catch (error) {
+            return false;
+        }
+        
     }
 
     hashCredentials(username: string, password: string): string {

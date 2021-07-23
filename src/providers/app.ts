@@ -172,7 +172,17 @@ export class CoreAppProvider {
 
     protected offlineAuthTableSchema: SQLiteDBTableSchema = {
         name: this.OFFLINE_AUTH_TABLE,
-        columns: []
+        columns: [
+            {
+                name: 'siteId',
+                type: 'TEXT',
+                primaryKey: true
+            },
+            {
+                name: 'userPasswordHash',
+                type: 'TEXT'
+            }
+        ]
     };
 
     constructor(dbProvider: CoreDbProvider,
@@ -309,9 +319,15 @@ export class CoreAppProvider {
 
     async getHashedCredentials(siteId: string): Promise<string> {
         await this.offlineAuthTableReady;
-        const hashedUserPassword = await this.db.getRecord(this.OFFLINE_AUTH_TABLE, {id: siteId});
 
-        return hashedUserPassword;
+        try {
+            const entry = await this.db.getRecord(this.OFFLINE_AUTH_TABLE, {siteId: siteId});
+
+            return entry.userPasswordHash;
+        } catch (error) {
+            return null;
+        }
+        
     }
 
     /**

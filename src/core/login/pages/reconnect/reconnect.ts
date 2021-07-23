@@ -20,6 +20,7 @@ import { CoreSitesProvider } from '@providers/sites';
 import { CoreDomUtilsProvider } from '@providers/utils/dom';
 import { CoreLoginHelperProvider } from '../../providers/helper';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import sjcl from 'sjcl';
 
 /**
  * Page to enter the user password to reconnect to a site.
@@ -271,13 +272,17 @@ export class CoreLoginReconnectPage {
     }
 
     async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
-        let storedHashedCredentials = await this.appProvider.getHashedCredentials(this.siteId);
-        let enteredHashedCredentials = this.hashCredentials(username, password);
-        
+        const storedHashedCredentials = await this.appProvider.getHashedCredentials(this.siteId);
+        const enteredHashedCredentials = this.hashCredentials(username, password);
+
         return storedHashedCredentials === enteredHashedCredentials;
     }
 
     hashCredentials(username: string, password: string): string {
-        return "";
+        const combinedCredentials = username + password;
+        const bitArray = sjcl.hash.sha256.hash(combinedCredentials);
+        const hashedCredentials = sjcl.codec.hex.fromBits(bitArray);
+
+        return hashedCredentials;
     }
 }

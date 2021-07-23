@@ -128,7 +128,8 @@
     "sw-toolbox": "3.6.0",
     "ts-md5": "1.2.7",
     "web-animations-js": "2.3.2",
-    "zone.js": "0.8.29"
+    "zone.js": "0.8.29",
+    "sjcl": "1.0.8"
   },
   "devDependencies": {
     "@ionic/app-scripts": "3.2.3",

@@ -187,7 +187,7 @@ export class CoreLoginReconnectPage {
         if (!this.appProvider.isOnline()) {
             this.validateCredentialsOffline(username, password).then((success) => {
                 if (success) {
-                    this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, "offline_token", null).then(() => {
+                    this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, 'offline_token', null).then(() => {
                         this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
         
                         // Reset fields so the data is not in the view anymore.
@@ -271,8 +271,13 @@ export class CoreLoginReconnectPage {
     }
 
     async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
-        // TODO: HASH THE SAME WAY THE HASH HAPPENED BEFORE STORAGE
-        // TODO: VERIFY CREDENTIALS WITH WHATEVER STORED FROM LAST LOGIN SUCCESS
-        return true;
+        let storedHashedCredentials = await this.appProvider.getHashedCredentials(this.siteId);
+        let enteredHashedCredentials = this.hashCredentials(username, password);
+        
+        return storedHashedCredentials === enteredHashedCredentials;
+    }
+
+    hashCredentials(username: string, password: string): string {
+        return "";
     }
 }

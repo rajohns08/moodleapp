@@ -286,10 +286,6 @@ export class CoreSitesProvider {
                         name: 'oauthId',
                         type: 'INTEGER'
                     },
-                    {
-                        name: 'userPasswordHash',
-                        type: 'TEXT'
-                    },
                 ],
             },
             {

@@ -972,6 +972,7 @@ export class CoreUtilsProvider {
             // In Android we keep it because otherwise we lose the whole toolbar.
             options.location = 'no';
         }
+        
         this.iabInstance = this.iab.create(url, '_blank', options);
 
         if (CoreApp.instance.isDesktop() || CoreApp.instance.isMobile()) {

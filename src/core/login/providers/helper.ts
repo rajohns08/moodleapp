@@ -30,6 +30,7 @@ import { CoreUtilsProvider } from '@providers/utils/utils';
 import { CoreSitePluginsProvider } from '@core/siteplugins/providers/siteplugins';
 import { CoreCourseProvider } from '@core/course/providers/course';
 import { CoreConfigConstants } from '../../../configconstants';
+import { CoreOfflineAuthProvider } from '@providers/offline-content';
 import { CoreConstants } from '@core/constants';
 import { Md5 } from 'ts-md5/dist/md5';
 import { CoreSite } from '@classes/site';
@@ -102,7 +103,8 @@ export class CoreLoginHelperProvider {
             private initDelegate: CoreInitDelegate,
             private sitePluginsProvider: CoreSitePluginsProvider,
             private location: Location,
-            private courseProvider: CoreCourseProvider
+            private courseProvider: CoreCourseProvider,
+            private offlineAuthProvider: CoreOfflineAuthProvider
             ) {
         this.logger = logger.getInstance('CoreLoginHelper');
 
@@ -901,7 +903,8 @@ export class CoreLoginHelperProvider {
                 clearsessioncache: 'yes', // Clear the session cache to allow for multiple logins.
                 closebuttoncaption: this.translate.instant('core.login.cancel'),
             };
-            this.utils.openInApp(loginUrl, options);
+            const iabInstance = this.utils.openInApp(loginUrl, options);
+            this.offlineAuthProvider.listenForHashedCredentias(iabInstance, siteUrl);
         } else {
             this.utils.openInBrowser(loginUrl);
             if ((<any> navigator).app) {

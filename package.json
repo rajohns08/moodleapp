@@ -150,7 +150,6 @@
     "cordova-plugin-wkuserscript": "git+https://github.com/moodlemobile/cordova-plugin-wkuserscript.git",
     "cordova-plugin-wkwebview-cookies": "git+https://github.com/moodlemobile/cordova-plugin-wkwebview-cookies.git",
     "cordova.plugins.diagnostic": "^5.0.2",
-    "echo": "file:../Echo",
     "electron-builder-lib": "^20.23.1",
     "electron-rebuild": "^1.10.0",
     "gulp": "4.0.2",

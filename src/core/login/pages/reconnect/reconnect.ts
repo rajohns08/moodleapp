@@ -190,21 +190,11 @@ export class CoreLoginReconnectPage {
                 if (success) {
                     this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, 'offline_token', null).then(() => {
                         this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
-        
                         // Reset fields so the data is not in the view anymore.
                         this.credForm.controls['password'].reset();
-        
+
                         // Go to the site initial page.
                         return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
-                    }).catch((error) => {
-                        if (error.loggedout) {
-                            this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-                        } else {
-                            this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
-                        }
-        
-                        // Error, go back to login page.
-                        this.cancel();
                     });
                 } else {
                     this.domUtils.showErrorModal('addon.mod_lesson.loginfail', true);
@@ -216,14 +206,14 @@ export class CoreLoginReconnectPage {
             // Start the authentication process.
             this.sitesProvider.getUserToken(siteUrl, username, password).then((data) => {
                 return this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, data.token, data.privateToken).then(() => {
-    
+
                     this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
-    
+
                     // Update site info too because functions might have changed (e.g. unisntall local_mobile).
                     return this.sitesProvider.updateSiteInfoByUrl(this.infoSiteUrl, username).then(() => {
                         // Reset fields so the data is not in the view anymore.
                         this.credForm.controls['password'].reset();
-    
+
                         // Go to the site initial page.
                         return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
                     }).catch((error) => {
@@ -232,14 +222,13 @@ export class CoreLoginReconnectPage {
                         } else {
                             this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
                         }
-    
                         // Error, go back to login page.
                         this.cancel();
                     });
                 });
             }).catch((error) => {
                 this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-    
+
                 if (error.loggedout) {
                     this.cancel();
                 } else if (error.errorcode == 'forcepasswordchangenotice') {
@@ -280,7 +269,7 @@ export class CoreLoginReconnectPage {
         } catch (error) {
             return false;
         }
-        
+
     }
 
     hashCredentials(username: string, password: string): string {

@@ -21,7 +21,6 @@ import { WebIntent } from '@ionic-native/web-intent';
 import { QRScanner } from '@ionic-native/qr-scanner';
 import { CoreApp } from '../app';
 import { CoreDomUtilsProvider } from './dom';
-import { coolMethod } from '../../../plugins/cordova-plugin-echo/www/Echo.js';
 import { CoreMimetypeUtilsProvider } from './mimetype';
 import { CoreTextUtilsProvider } from './text';
 import { CoreEventsProvider } from '../events';
@@ -1508,13 +1507,6 @@ export class CoreUtilsProvider {
      * @return Promise resolved with the QR string, rejected if error or cancelled.
      */
     startScanQR(): Promise<string> {
-        console.log("hey theere");
-        coolMethod('echozit', function(str){
-            console.log('got shit: ' + str);
-        }, function(err){
-            console.log('got nuttin: ' + err);
-        });
-
         if (!CoreApp.instance.isMobile()) {
             return Promise.reject('QRScanner isn\'t available in desktop apps.');
         }

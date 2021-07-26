@@ -327,7 +327,7 @@ export class CoreAppProvider {
         } catch (error) {
             return null;
         }
-        
+
     }
 
     /**

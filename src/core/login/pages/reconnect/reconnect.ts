@@ -15,11 +15,13 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { CoreAppProvider } from '@providers/app';
+import { CoreOfflineAuthProvider } from '@providers/offline-content';
 import { CoreEventsProvider } from '@providers/events';
 import { CoreSitesProvider } from '@providers/sites';
 import { CoreDomUtilsProvider } from '@providers/utils/dom';
 import { CoreLoginHelperProvider } from '../../providers/helper';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import sjcl from 'sjcl';
 
 /**
  * Page to enter the user password to reconnect to a site.
@@ -60,7 +62,8 @@ export class CoreLoginReconnectPage {
             protected sitesProvider: CoreSitesProvider,
             protected loginHelper: CoreLoginHelperProvider,
             protected domUtils: CoreDomUtilsProvider,
-            protected eventsProvider: CoreEventsProvider) {
+            protected eventsProvider: CoreEventsProvider,
+            private offlineAuthProvider: CoreOfflineAuthProvider) {
 
         const currentSite = this.sitesProvider.getCurrentSite();
 
@@ -185,49 +188,60 @@ export class CoreLoginReconnectPage {
         }
 
         if (!this.appProvider.isOnline()) {
-            this.domUtils.showErrorModal('core.networkerrormsg', true);
+            this.validateCredentialsOffline(username, password).then((success) => {
+                if (success) {
+                    this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, 'offline_token', null).then(() => {
+                        this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
+                        // Reset fields so the data is not in the view anymore.
+                        this.credForm.controls['password'].reset();
 
-            return;
+                        // Go to the site initial page.
+                        return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
+                    });
+                } else {
+                    this.domUtils.showErrorModal('addon.mod_lesson.loginfail', true);
+                }
+            });
+        } else {
+            const modal = this.domUtils.showModalLoading();
+
+            // Start the authentication process.
+            this.sitesProvider.getUserToken(siteUrl, username, password).then((data) => {
+                return this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, data.token, data.privateToken).then(() => {
+
+                    this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
+
+                    // Update site info too because functions might have changed (e.g. unisntall local_mobile).
+                    return this.sitesProvider.updateSiteInfoByUrl(this.infoSiteUrl, username).then(() => {
+                        // Reset fields so the data is not in the view anymore.
+                        this.credForm.controls['password'].reset();
+
+                        // Go to the site initial page.
+                        return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
+                    }).catch((error) => {
+                        if (error.loggedout) {
+                            this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
+                        } else {
+                            this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
+                        }
+                        // Error, go back to login page.
+                        this.cancel();
+                    });
+                });
+            }).catch((error) => {
+                this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
+
+                if (error.loggedout) {
+                    this.cancel();
+                } else if (error.errorcode == 'forcepasswordchangenotice') {
+                    // Reset password field.
+                    this.credForm.controls.password.reset();
+                }
+            }).finally(() => {
+                modal.dismiss();
+            });
         }
 
-        const modal = this.domUtils.showModalLoading();
-
-        // Start the authentication process.
-        this.sitesProvider.getUserToken(siteUrl, username, password).then((data) => {
-            return this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, data.token, data.privateToken).then(() => {
-
-                this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
-
-                // Update site info too because functions might have changed (e.g. unisntall local_mobile).
-                return this.sitesProvider.updateSiteInfoByUrl(this.infoSiteUrl, username).then(() => {
-                    // Reset fields so the data is not in the view anymore.
-                    this.credForm.controls['password'].reset();
-
-                    // Go to the site initial page.
-                    return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
-                }).catch((error) => {
-                    if (error.loggedout) {
-                        this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-                    } else {
-                        this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
-                    }
-
-                    // Error, go back to login page.
-                    this.cancel();
-                });
-            });
-        }).catch((error) => {
-            this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-
-            if (error.loggedout) {
-                this.cancel();
-            } else if (error.errorcode == 'forcepasswordchangenotice') {
-                // Reset password field.
-                this.credForm.controls.password.reset();
-            }
-        }).finally(() => {
-            modal.dismiss();
-        });
     }
 
     /**
@@ -246,5 +260,25 @@ export class CoreLoginReconnectPage {
         if (!this.loginHelper.openBrowserForOAuthLogin(this.siteUrl, provider, this.siteConfig.launchurl)) {
             this.domUtils.showErrorModal('Invalid data.');
         }
+    }
+
+    async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
+        try {
+            const storedHashedCredentials = await this.offlineAuthProvider.getHashedCredentials(this.siteId);
+            const enteredHashedCredentials = this.hashCredentials(username, password);
+
+            return storedHashedCredentials === enteredHashedCredentials;
+        } catch (error) {
+            return false;
+        }
+
+    }
+
+    hashCredentials(username: string, password: string): string {
+        const combinedCredentials = username + password;
+        const bitArray = sjcl.hash.sha256.hash(combinedCredentials);
+        const hashedCredentials = sjcl.codec.hex.fromBits(bitArray);
+
+        return hashedCredentials;
     }
 }

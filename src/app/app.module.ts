@@ -62,6 +62,7 @@ import { CoreSyncProvider } from '@providers/sync';
 import { CoreFileHelperProvider } from '@providers/file-helper';
 import { CoreCustomURLSchemesProvider } from '@providers/urlschemes';
 import { CoreGeolocationProvider } from '@providers/geolocation';
+import { CoreOfflineAuthProvider } from '@providers/offline-content';
 
 // Handlers.
 import { CoreSiteInfoCronHandler } from '@providers/handlers/site-info-cron-handler';
@@ -199,6 +200,7 @@ export const CORE_PROVIDERS: any[] = [
     CoreFileHelperProvider,
     CoreCustomURLSchemesProvider,
     CoreGeolocationProvider,
+    CoreOfflineAuthProvider
 ];
 
 export const WP_PROVIDER: any = null;
@@ -348,6 +350,7 @@ export const WP_PROVIDER: any = null;
         CoreCustomURLSchemesProvider,
         CoreGeolocationProvider,
         CoreSiteInfoCronHandler,
+        CoreOfflineAuthProvider,
         {
             provide: HTTP_INTERCEPTORS,
             useClass: CoreInterceptor,
@@ -373,6 +376,7 @@ export class AppModule {
             cronDelegate: CoreCronDelegate,
             siteInfoCronHandler: CoreSiteInfoCronHandler,
             injector: Injector,
+            offlineAuthProvider: CoreOfflineAuthProvider
             ) {
         // Register a handler for platform ready.
         initDelegate.registerProcess({

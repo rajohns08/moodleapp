@@ -31,6 +31,7 @@ import { CoreWSProvider, CoreWSError } from '../ws';
 import { CoreFile } from '../file';
 import { Subscription } from 'rxjs';
 import { makeSingleton } from '@singletons/core.singletons';
+import { Md5 } from 'ts-md5/dist/md5';
 
 /**
  * Deferred promise. It's similar to the result of $q.defer() in AngularJS.
@@ -971,7 +972,7 @@ export class CoreUtilsProvider {
             // In Android we keep it because otherwise we lose the whole toolbar.
             options.location = 'no';
         }
-
+        
         this.iabInstance = this.iab.create(url, '_blank', options);
 
         if (CoreApp.instance.isDesktop() || CoreApp.instance.isMobile()) {
@@ -1610,6 +1611,17 @@ export class CoreUtilsProvider {
         return new Promise((resolve, reject): void => {
             setTimeout(resolve, milliseconds);
         });
+    }
+
+        /**
+     * Create a site ID based on site URL and username.
+     *
+     * @param siteUrl The site url.
+     * @param username Username.
+     * @return Site ID.
+     */
+    createSiteID(siteUrl: string, username: string): string {
+        return <string> Md5.hashAsciiStr(siteUrl + username);
     }
 }
 

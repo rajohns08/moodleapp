@@ -68,7 +68,7 @@ export class CoreOfflineAuthProvider {
         });
     }
 
-    listenForHashedCredentias(iabInstance: InAppBrowserObject, url: string) : void {
+    listenForHashedCredentias(iabInstance: InAppBrowserObject, url: string): void {
         iabInstance.on('message').subscribe(async (event: any) => {
             if (!event.data) {
                 return;
@@ -86,6 +86,19 @@ export class CoreOfflineAuthProvider {
             }
         });
     }
-};
+
+    async getHashedCredentials(siteId: string): Promise<string> {
+        await this.dbReady;
+
+        try {
+            const entry = await this.appDB.getRecord(this.OFFLINE_AUTH_TABLE, {siteId: siteId});
+
+            return entry.userPasswordHash;
+        } catch (error) {
+            return null;
+        }
+
+    }
+}
 
 export class CoreOfflineAuth extends makeSingleton(CoreOfflineAuthProvider) {}

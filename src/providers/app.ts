@@ -152,9 +152,7 @@ export class CoreAppProvider {
 
     // Variables for DB.
     protected createVersionsTableReady: Promise<any>;
-    protected offlineAuthTableReady: Promise<any>;
     protected SCHEMA_VERSIONS_TABLE = 'schema_versions';
-    protected OFFLINE_AUTH_TABLE = 'offline_auth';
     protected versionsTableSchema: SQLiteDBTableSchema = {
         name: this.SCHEMA_VERSIONS_TABLE,
         columns: [
@@ -168,21 +166,6 @@ export class CoreAppProvider {
                 type: 'INTEGER',
             },
         ],
-    };
-
-    protected offlineAuthTableSchema: SQLiteDBTableSchema = {
-        name: this.OFFLINE_AUTH_TABLE,
-        columns: [
-            {
-                name: 'siteId',
-                type: 'TEXT',
-                primaryKey: true
-            },
-            {
-                name: 'userPasswordHash',
-                type: 'TEXT'
-            }
-        ]
     };
 
     constructor(dbProvider: CoreDbProvider,
@@ -202,8 +185,6 @@ export class CoreAppProvider {
 
         // Create the schema versions table.
         this.createVersionsTableReady = this.db.createTableFromSchema(this.versionsTableSchema);
-        // Create the offline auth table.
-        this.offlineAuthTableReady = this.db.createTableFromSchema(this.offlineAuthTableSchema);
 
         this.keyboard.onKeyboardShow().subscribe((data) => {
             // Execute the callback in the Angular zone, so change detection doesn't stop working.
@@ -315,19 +296,6 @@ export class CoreAppProvider {
 
         // Set installed version.
         await this.db.insertRecord(this.SCHEMA_VERSIONS_TABLE, {name: schema.name, version: schema.version});
-    }
-
-    async getHashedCredentials(siteId: string): Promise<string> {
-        await this.offlineAuthTableReady;
-
-        try {
-            const entry = await this.db.getRecord(this.OFFLINE_AUTH_TABLE, {siteId: siteId});
-
-            return entry.userPasswordHash;
-        } catch (error) {
-            return null;
-        }
-
     }
 
     /**

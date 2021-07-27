@@ -243,7 +243,6 @@ export class CoreSitesProvider {
     // Variables for the database.
     static SITES_TABLE = 'sites_2';
     static CURRENT_SITE_TABLE = 'current_site';
-    static OFFLINE_AUTH_TABLE = 'offline_credentials_table'
     static SCHEMA_VERSIONS_TABLE = 'schema_versions';
     protected appTablesSchema: CoreAppSchema = {
         name: 'CoreSitesProvider',

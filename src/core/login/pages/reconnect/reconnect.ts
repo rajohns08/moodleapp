@@ -15,6 +15,7 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { CoreAppProvider } from '@providers/app';
+import { CoreOfflineAuthProvider } from '@providers/offline-content';
 import { CoreEventsProvider } from '@providers/events';
 import { CoreSitesProvider } from '@providers/sites';
 import { CoreDomUtilsProvider } from '@providers/utils/dom';
@@ -61,7 +62,8 @@ export class CoreLoginReconnectPage {
             protected sitesProvider: CoreSitesProvider,
             protected loginHelper: CoreLoginHelperProvider,
             protected domUtils: CoreDomUtilsProvider,
-            protected eventsProvider: CoreEventsProvider) {
+            protected eventsProvider: CoreEventsProvider,
+            private offlineAuthProvider: CoreOfflineAuthProvider) {
 
         const currentSite = this.sitesProvider.getCurrentSite();
 
@@ -262,7 +264,7 @@ export class CoreLoginReconnectPage {
 
     async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
         try {
-            const storedHashedCredentials = await this.appProvider.getHashedCredentials(this.siteId);
+            const storedHashedCredentials = await this.offlineAuthProvider.getHashedCredentials(this.siteId);
             const enteredHashedCredentials = this.hashCredentials(username, password);
 
             return storedHashedCredentials === enteredHashedCredentials;

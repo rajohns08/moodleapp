@@ -69,6 +69,9 @@ export class CoreOfflineAuthProvider {
     }
 
     listenForHashedCredentias(iabInstance: InAppBrowserObject, url: string): void {
+        //cache siteId on login and password reset flows
+        let siteId;
+
         iabInstance.on('message').subscribe(async (event: any) => {
             if (!event.data) {
                 return;
@@ -76,15 +79,25 @@ export class CoreOfflineAuthProvider {
             
             const {subType, username, userPasswordHash} = event.data;
 
-            if (subType == 'sso-credentials') {
-                await this.dbReady;
-                const entry = {
-                    siteId: this.utils.createSiteID(url, username),
-                    userPasswordHash
-                };
-                this.appDB.insertRecord(this.OFFLINE_AUTH_TABLE, entry);
+            if(subType == 'sso-credentials') {
+                if(username) {
+                    siteId = this.utils.createSiteID(url, username);
+                }
+
+                if(siteId && userPasswordHash) {
+                    this.updateHashedCredential(siteId, userPasswordHash);
+                }
             }
         });
+    }
+
+    async updateHashedCredential(siteId, userPasswordHash) {
+        await this.dbReady;
+        const entry = {
+            siteId,
+            userPasswordHash
+        };
+        this.appDB.insertRecord(this.OFFLINE_AUTH_TABLE, entry);
     }
 
     async getHashedCredentials(siteId: string): Promise<string> {

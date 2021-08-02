@@ -265,7 +265,7 @@ export class CoreLoginReconnectPage {
     async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
         try {
             const storedHashedCredentials = await this.offlineAuthProvider.getHashedCredentials(this.siteId);
-            const enteredHashedCredentials = this.hashCredentials(username, password);
+            const enteredHashedCredentials = this.hashCredentials(password);
 
             return storedHashedCredentials === enteredHashedCredentials;
         } catch (error) {
@@ -274,9 +274,8 @@ export class CoreLoginReconnectPage {
 
     }
 
-    hashCredentials(username: string, password: string): string {
-        const combinedCredentials = username + password;
-        const bitArray = sjcl.hash.sha256.hash(combinedCredentials);
+    hashCredentials(password: string): string {
+        const bitArray = sjcl.hash.sha256.hash(password);
         const hashedCredentials = sjcl.codec.hex.fromBits(bitArray);
 
         return hashedCredentials;

@@ -75,6 +75,8 @@ export class CoreLoginSitesPage {
      * Go to the page to add a site.
      */
     add(): void {
+        // Clear cache to avoid site login credentials from different sites getting mixed
+        this.offlineAuthProvider.clearCachedCredentials();
         this.loginHelper.goToAddSite(false, true);
     }
 

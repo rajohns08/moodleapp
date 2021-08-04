@@ -77,10 +77,14 @@ export class CoreOfflineAuthProvider {
             // be undefined and the DB won't update
             if(this.siteId && this.userPasswordHash) {
                 this.updateHashedCredential(this.siteId, this.userPasswordHash);
-                this.siteId = undefined;
-                this.userPasswordHash = undefined;
+                this.clearCachedCredentials();
             }
         });
+    }
+
+    clearCachedCredentials(): void {
+        this.siteId = undefined;
+        this.userPasswordHash = undefined;
     }
 
     listenForHashedCredentias(iabInstance: InAppBrowserObject, url: string): void {

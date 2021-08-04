@@ -19,6 +19,7 @@ import { CoreSitesProvider, CoreSiteBasicInfo } from '@providers/sites';
 import { CoreDomUtilsProvider } from '@providers/utils/dom';
 import { CorePushNotificationsProvider } from '@core/pushnotifications/providers/pushnotifications';
 import { CoreLoginHelperProvider } from '../../providers/helper';
+import { CoreOfflineAuthProvider } from '@providers/offline-content';
 import { CoreFilterProvider } from '@core/filter/providers/filter';
 
 /**
@@ -39,7 +40,8 @@ export class CoreLoginSitesPage {
             private sitesProvider: CoreSitesProvider,
             private loginHelper: CoreLoginHelperProvider,
             logger: CoreLoggerProvider,
-            private pushNotificationsProvider: CorePushNotificationsProvider) {
+            private pushNotificationsProvider: CorePushNotificationsProvider,
+            private offlineAuthProvider: CoreOfflineAuthProvider) {
         this.logger = logger.getInstance('CoreLoginSitesPage');
     }
 
@@ -73,6 +75,8 @@ export class CoreLoginSitesPage {
      * Go to the page to add a site.
      */
     add(): void {
+        // Clear cache to avoid site login credentials from different sites getting mixed
+        this.offlineAuthProvider.clearCachedCredentials();
         this.loginHelper.goToAddSite(false, true);
     }
 
@@ -117,6 +121,9 @@ export class CoreLoginSitesPage {
      * @param siteId The site ID.
      */
     login(siteId: string): void {
+        // Clear cache to avoid site login credentials from different sites getting mixed
+        this.offlineAuthProvider.clearCachedCredentials();
+
         const modal = this.domUtils.showModalLoading();
 
         this.sitesProvider.loadSite(siteId).then((loggedIn) => {

@@ -15,6 +15,7 @@
 import { Injectable } from '@angular/core';
 import { CoreAppProvider, CoreAppSchema } from './app';
 import { CoreLoggerProvider } from './logger';
+import { CoreEventsProvider } from '@providers/events';
 import { CoreUtilsProvider } from './utils/utils';
 import { SQLiteDB } from '@classes/sqlitedb';
 import { makeSingleton } from '@singletons/core.singletons';
@@ -55,10 +56,13 @@ export class CoreOfflineAuthProvider {
     protected logger;
     protected appDB: SQLiteDB;
     protected dbReady: Promise<any>; // Promise resolved when the app DB is initialized.
+    private siteId;
+    private userPasswordHash
     
     constructor(
             logger: CoreLoggerProvider,
             private utils: CoreUtilsProvider,
+            private eventsProvider: CoreEventsProvider,
             appProvider: CoreAppProvider) {
 
         this.logger = logger.getInstance('OfflineAuthProvider');
@@ -66,12 +70,24 @@ export class CoreOfflineAuthProvider {
         this.dbReady = appProvider.createTablesFromSchema(this.tablesSchema).catch(() => {
             // Ignore errors.
         });
+
+        // On successful login update the DB with hashed credentials
+        this.eventsProvider.on(CoreEventsProvider.LOGIN, () => {
+            // Login is fired even on credential less login. In that case, cached credentials will 
+            // be undefined and the DB won't update
+            if(this.siteId && this.userPasswordHash) {
+                this.updateHashedCredential(this.siteId, this.userPasswordHash);
+                this.clearCachedCredentials();
+            }
+        });
+    }
+
+    clearCachedCredentials(): void {
+        this.siteId = undefined;
+        this.userPasswordHash = undefined;
     }
 
     listenForHashedCredentias(iabInstance: InAppBrowserObject, url: string): void {
-        //cache siteId on login and password reset flows
-        let siteId;
-
         iabInstance.on('message').subscribe(async (event: any) => {
             if (!event.data) {
                 return;
@@ -79,13 +95,13 @@ export class CoreOfflineAuthProvider {
             
             const {subType, username, userPasswordHash} = event.data;
 
+            // Cache credentials as the user fills out sso forms
             if(subType == 'sso-credentials') {
                 if(username) {
-                    siteId = this.utils.createSiteID(url, username);
+                    this.siteId = this.utils.createSiteID(url, username);
                 }
-
-                if(siteId && userPasswordHash) {
-                    this.updateHashedCredential(siteId, userPasswordHash);
+                if (userPasswordHash) {
+                    this.userPasswordHash = userPasswordHash;
                 }
             }
         });

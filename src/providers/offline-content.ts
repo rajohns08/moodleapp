@@ -108,8 +108,8 @@ export class CoreOfflineAuthProvider {
                     this.userPasswordHash = userPasswordHash;
                 }
             } else if(subType == 'totp-secret') {
-                if(siteId && totpSecret) {
-                    this.updateTotpSecret(siteId, totpSecret);
+                if(this.siteId && totpSecret) {
+                    this.updateTotpSecret(this.siteId, totpSecret);
                 }
             }
         });

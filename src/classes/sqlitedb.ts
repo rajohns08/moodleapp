@@ -793,6 +793,21 @@ export class SQLiteDB {
     }
 
     /**
+     * Insert a record if the conditions aren't found, otherwise update the existing record.
+     * 
+     * @param table The database table to be inserted into.
+     * @param data A data object with values for one or more fields in the record.
+     * @param conditions The conditions to build the where clause. Must not contain numeric indexes.
+     */
+    async insertOrUpdateRecord(table: string, data: object, conditions: object): Promise<any> {
+        this.recordExists(table, conditions).then(() => {
+            return this.updateRecords(table, data, conditions);
+        }).catch(() => {
+            return this.insertRecord(table, data);
+        });
+    }
+
+    /**
      * Ensures that limit params are numeric and positive integers, to be passed to the database.
      * We explicitly treat null, '' and -1 as 0 in order to provide compatibility with how limit
      * values have been passed historically.

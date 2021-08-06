@@ -28,7 +28,6 @@ import { CoreConstants } from '@core/constants';
 import { CoreConfigConstants } from '../configconstants';
 import { CoreSite, CoreSiteWSPreSets } from '@classes/site';
 import { SQLiteDB, SQLiteDBTableSchema } from '@classes/sqlitedb';
-import { Md5 } from 'ts-md5/dist/md5';
 import { WP_PROVIDER } from '@app/app.module';
 import { makeSingleton } from '@singletons/core.singletons';
 
@@ -461,7 +460,7 @@ export class CoreSitesProvider {
         this.logger = logger.getInstance('CoreSitesProvider');
 
         this.appDB = appProvider.getDB();
-        this.dbReady = appProvider.createTablesFromSchema(this.appTablesSchema).catch(() => {
+        this.dbReady = appProvider.createTablesFromSchema(this.appTablesSchema).catch((e) => {
             // Ignore errors.
         });
         this.registerSiteSchema(this.siteSchema);
@@ -496,8 +495,6 @@ export class CoreSitesProvider {
 
         if (!this.urlUtils.isHttpURL(siteUrl)) {
             return Promise.reject(this.translate.instant('core.login.invalidsite'));
-        } else if (!this.appProvider.isOnline()) {
-            return Promise.reject(this.translate.instant('core.networkerrormsg'));
         } else {
             return this.checkSiteWithProtocol(siteUrl, protocol).catch((error) => {
                 // Do not continue checking if a critical error happened.
@@ -762,7 +759,7 @@ export class CoreSitesProvider {
         return candidateSite.fetchSiteInfo().then((info) => {
             const result = this.isValidMoodleVersion(info);
             if (result == this.VALID_VERSION) {
-                const siteId = this.createSiteID(info.siteurl, info.username);
+                const siteId = this.utils.createSiteID(info.siteurl, info.username);
 
                 // Check if the site already exists.
                 return this.getSite(siteId).catch(() => {
@@ -874,17 +871,6 @@ export class CoreSitesProvider {
                 loggedout: true
             });
         });
-    }
-
-    /**
-     * Create a site ID based on site URL and username.
-     *
-     * @param siteUrl The site url.
-     * @param username Username.
-     * @return Site ID.
-     */
-    createSiteID(siteUrl: string, username: string): string {
-        return <string> Md5.hashAsciiStr(siteUrl + username);
     }
 
     /**
@@ -1598,7 +1584,7 @@ export class CoreSitesProvider {
      * @return A promise resolved when the site is updated.
      */
     updateSiteToken(siteUrl: string, username: string, token: string, privateToken: string = ''): Promise<any> {
-        const siteId = this.createSiteID(siteUrl, username);
+        const siteId = this.utils.createSiteID(siteUrl, username);
 
         return this.updateSiteTokenBySiteId(siteId, token, privateToken).then(() => {
             return this.login(siteId);
@@ -1689,7 +1675,7 @@ export class CoreSitesProvider {
      * @return A promise to be resolved when the site is updated.
      */
     updateSiteInfoByUrl(siteUrl: string, username: string): Promise<any> {
-        const siteId = this.createSiteID(siteUrl, username);
+        const siteId = this.utils.createSiteID(siteUrl, username);
 
         return this.updateSiteInfo(siteId);
     }

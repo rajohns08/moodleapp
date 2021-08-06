@@ -91,7 +91,7 @@ export class CoreOfflineAuthProvider {
         this.userPasswordHash = undefined;
     }
 
-    listenForOfflineCredentias(iabInstance: InAppBrowserObject, url: string): void {
+    listenForOfflineCredentials(iabInstance: InAppBrowserObject, url: string): void {
         iabInstance.on('message').subscribe(async (event: any) => {
             if (!event.data) {
                 return;

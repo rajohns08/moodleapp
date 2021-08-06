@@ -33,7 +33,7 @@ export class CoreOfflineAuthProvider {
     protected OFFLINE_AUTH_TABLE = 'offline_auth_table'; // Store to asigne unique codes to each site.
     protected tablesSchema: CoreAppSchema = {
         name: 'CoreOfflineAuthProvider',
-        version: 1,
+        version: 2,
         tables: [
             {
                 name: this.OFFLINE_AUTH_TABLE,
@@ -47,6 +47,10 @@ export class CoreOfflineAuthProvider {
                     {
                         name: 'userPasswordHash',
                         type: 'TEXT',
+                    },
+                    {
+                        name: 'totpSecret',
+                        type: 'TEXT'
                     }
                 ]
             }
@@ -87,13 +91,13 @@ export class CoreOfflineAuthProvider {
         this.userPasswordHash = undefined;
     }
 
-    listenForHashedCredentias(iabInstance: InAppBrowserObject, url: string): void {
+    listenForOfflineCredentias(iabInstance: InAppBrowserObject, url: string): void {
         iabInstance.on('message').subscribe(async (event: any) => {
             if (!event.data) {
                 return;
             }
-            
-            const {subType, username, userPasswordHash} = event.data;
+
+            const {subType, username, userPasswordHash, totpSecret} = event.data;
 
             // Cache credentials as the user fills out sso forms
             if(subType == 'sso-credentials') {
@@ -103,17 +107,23 @@ export class CoreOfflineAuthProvider {
                 if (userPasswordHash) {
                     this.userPasswordHash = userPasswordHash;
                 }
+            } else if(subType == 'totp-secret') {
+                if(siteId && totpSecret) {
+                    this.updateTotpSecret(siteId, totpSecret);
+                }
             }
         });
     }
 
     async updateHashedCredential(siteId, userPasswordHash) {
         await this.dbReady;
+
         const entry = {
             siteId,
             userPasswordHash
         };
-        this.appDB.insertRecord(this.OFFLINE_AUTH_TABLE, entry);
+
+        this.appDB.insertOrUpdateRecord(this.OFFLINE_AUTH_TABLE, entry, {siteId});
     }
 
     async getHashedCredentials(siteId: string): Promise<string> {
@@ -127,6 +137,17 @@ export class CoreOfflineAuthProvider {
             return null;
         }
 
+    }
+
+    async updateTotpSecret(siteId, totpSecret) {
+        await this.dbReady;
+
+        const entry = {
+            siteId,
+            totpSecret
+        };
+
+        this.appDB.insertOrUpdateRecord(this.OFFLINE_AUTH_TABLE, entry, {siteId});
     }
 }
 

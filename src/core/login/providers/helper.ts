@@ -904,7 +904,7 @@ export class CoreLoginHelperProvider {
                 closebuttoncaption: this.translate.instant('core.login.cancel'),
             };
             const iabInstance = this.utils.openInApp(loginUrl, options);
-            this.offlineAuthProvider.listenForHashedCredentias(iabInstance, siteUrl);
+            this.offlineAuthProvider.listenForOfflineCredentials(iabInstance, siteUrl);
         } else {
             this.utils.openInBrowser(loginUrl);
             if ((<any> navigator).app) {

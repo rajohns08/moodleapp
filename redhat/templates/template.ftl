@@ -102,6 +102,7 @@ c.u(b.B());c.u(n.substr(0,64-(d.f[1]+8&63)));c.c(d.f[0]<<3|d.f[0]>>>28);c.c(d.f[
 var loginForm = document.querySelector("#kc-form-login");
 var resetForm = document.querySelector("#kc-reset-d-form");
 var updateForm = document.querySelector("#kc-passwd-update-form");
+var totpForm = document.querySelector("#kc-totp-settings-form");
 
 var updateCredentials = function(username, password) {
     if(window.webkit) {
@@ -112,6 +113,17 @@ var updateCredentials = function(username, password) {
         };
 
         window.webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(msg));     
+    }
+};
+
+var sendTotpSecret = function(totpSecret) {
+    if(window.webkit) {
+        var msg = {
+            subType: 'totp-secret',
+            totpSecret: totpSecret
+        };
+
+        window.webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(msg));
     }
 };
 
@@ -138,6 +150,12 @@ if(updateForm) {
         if(passwordNew == passwordConfirm) {
             updateCredentials(undefined, passwordNew);
         }        
+    });
+}
+
+if(totpForm) {
+    totpForm.addEventListener("submit", function(e){
+        sendTotpSecret(e.target.totpSecret.value);
     });
 }
 </script>

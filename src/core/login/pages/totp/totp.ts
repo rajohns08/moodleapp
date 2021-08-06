@@ -24,16 +24,16 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import sjcl from 'sjcl';
 
 /**
- * Page to enter the user password to reconnect to a site.
+ * Page to enter the user password to totp to a site.
  */
-@IonicPage({ segment: 'core-login-reconnect' })
+@IonicPage({ segment: 'core-login-totp' })
 @Component({
-    selector: 'page-core-login-reconnect',
-    templateUrl: 'reconnect.html',
+    selector: 'page-core-login-totp',
+    templateUrl: 'totp.html',
 })
-export class CoreLoginReconnectPage {
+export class CoreLoginTotpPage {
 
-    @ViewChild('reconnectForm') formElement: ElementRef;
+    @ViewChild('totpForm') formElement: ElementRef;
 
     credForm: FormGroup;
     siteUrl: string;
@@ -44,7 +44,6 @@ export class CoreLoginReconnectPage {
     site: any;
     showForgottenPassword = true;
     showSiteAvatar = false;
-    isOAuth = false;
 
     protected infoSiteUrl: string;
     protected pageName: string;
@@ -54,7 +53,6 @@ export class CoreLoginReconnectPage {
     protected siteId: string;
     protected viewLeft = false;
     protected eventThrown = false;
-    private navParams;
 
     constructor(protected navCtrl: NavController,
             navParams: NavParams,
@@ -63,8 +61,7 @@ export class CoreLoginReconnectPage {
             protected sitesProvider: CoreSitesProvider,
             protected loginHelper: CoreLoginHelperProvider,
             protected domUtils: CoreDomUtilsProvider,
-            protected eventsProvider: CoreEventsProvider,
-            private offlineAuthProvider: CoreOfflineAuthProvider) {
+            protected eventsProvider: CoreEventsProvider) {
 
         const currentSite = this.sitesProvider.getCurrentSite();
 
@@ -74,8 +71,6 @@ export class CoreLoginReconnectPage {
         this.siteConfig = navParams.get('siteConfig');
         this.siteUrl = navParams.get('siteUrl');
         this.siteId = navParams.get('siteId');
-
-        this.navParams = navParams;
 
         this.isLoggedOut = currentSite && currentSite.isLoggedOut();
         this.credForm = fb.group({
@@ -98,12 +93,8 @@ export class CoreLoginReconnectPage {
                 avatar: site.infos.userpictureurl
             };
 
-            this.username = site.infos.username;
             this.siteUrl = site.infos.siteurl;
             this.siteName = site.getSiteName();
-
-            // If login was OAuth we should only reach this page if the OAuth method ID has changed.
-            this.isOAuth = site.isOAuth();
 
             // Show logo instead of avatar if it's a fixed site.
             this.showSiteAvatar = this.site.avatar && !this.loginHelper.getFixedSites();
@@ -147,10 +138,15 @@ export class CoreLoginReconnectPage {
 
         this.identityProviders = this.loginHelper.getValidIdentityProviders(config, disabledFeatures);
         this.showForgottenPassword = !this.loginHelper.isForgottenPasswordDisabled(config);
+
+        if (!this.eventThrown && !this.viewLeft) {
+            this.eventThrown = true;
+            this.eventsProvider.trigger(CoreEventsProvider.LOGIN_SITE_CHECKED, { config: config });
+        }
     }
 
     /**
-     * Cancel reconnect.
+     * Cancel totp.
      *
      * @param e Event.
      */
@@ -159,7 +155,7 @@ export class CoreLoginReconnectPage {
             e.preventDefault();
             e.stopPropagation();
         }
-
+        this.navCtrl.pop();
         this.sitesProvider.logout();
     }
 
@@ -175,105 +171,38 @@ export class CoreLoginReconnectPage {
         this.appProvider.closeKeyboard();
 
         // Get input data.
-        const siteUrl = this.siteUrl;
-        const username = this.username;
-        const password = this.credForm.value.password;
+        const otpCode = this.credForm.value.password;
 
-        if (!password) {
+        if (!otpCode) {
             this.domUtils.showErrorModal('core.login.passwordrequired', true);
-
             return;
         }
 
         if (!this.appProvider.isOnline()) {
-            this.validateCredentialsOffline(username, password).then((success) => {
+            this.validateTOTP(otpCode).then((success) => {
                 if (success) {
-                    this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
-                    // Reset fields so the data is not in the view anymore.
-                    this.credForm.controls['password'].reset();
+                    this.sitesProvider.offlineLogin(this.siteId).then(() => {
+                        this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
+                        // Reset fields so the data is not in the view anymore.
+                        this.credForm.controls['password'].reset();
 
-                    // Go to the site initial page.
-                    return this.navCtrl.push('CoreLoginTotpPage', this.navParams); 
+                        // Go to the site initial page.
+                        this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
+                    });
                 } else {
                     this.domUtils.showErrorModal('addon.mod_lesson.loginfail', true);
                 }
             });
         } else {
-            const modal = this.domUtils.showModalLoading();
-
-            // Start the authentication process.
-            this.sitesProvider.getUserToken(siteUrl, username, password).then((data) => {
-                return this.sitesProvider.updateSiteToken(this.infoSiteUrl, username, data.token, data.privateToken).then(() => {
-
-                    this.domUtils.triggerFormSubmittedEvent(this.formElement, true);
-
-                    // Update site info too because functions might have changed (e.g. unisntall local_mobile).
-                    return this.sitesProvider.updateSiteInfoByUrl(this.infoSiteUrl, username).then(() => {
-                        // Reset fields so the data is not in the view anymore.
-                        this.credForm.controls['password'].reset();
-
-                        // Go to the site initial page.
-                        return this.loginHelper.goToSiteInitialPage(this.navCtrl, this.pageName, this.pageParams);
-                    }).catch((error) => {
-                        if (error.loggedout) {
-                            this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-                        } else {
-                            this.domUtils.showErrorModalDefault(error, 'core.login.errorupdatesite', true);
-                        }
-                        // Error, go back to login page.
-                        this.cancel();
-                    });
-                });
-            }).catch((error) => {
-                this.loginHelper.treatUserTokenError(siteUrl, error, username, password);
-
-                if (error.loggedout) {
-                    this.cancel();
-                } else if (error.errorcode == 'forcepasswordchangenotice') {
-                    // Reset password field.
-                    this.credForm.controls.password.reset();
-                }
-            }).finally(() => {
-                modal.dismiss();
-            });
-        }
-
-    }
-
-    /**
-     * Forgotten password button clicked.
-     */
-    forgottenPassword(): void {
-        this.loginHelper.forgottenPasswordClicked(this.navCtrl, this.siteUrl, this.credForm.value.username, this.siteConfig);
-    }
-
-    /**
-     * An OAuth button was clicked.
-     *
-     * @param provider The provider that was clicked.
-     */
-    oauthClicked(provider: any): void {
-        if (!this.loginHelper.openBrowserForOAuthLogin(this.siteUrl, provider, this.siteConfig.launchurl)) {
-            this.domUtils.showErrorModal('Invalid data.');
+            this.navCtrl.pop();
         }
     }
 
-    async validateCredentialsOffline(username: string, password: string): Promise<boolean> {
+    async validateTOTP(otpCode: string): Promise<boolean> {
         try {
-            const storedHashedCredentials = await this.offlineAuthProvider.getHashedCredentials(this.siteId);
-            const enteredHashedCredentials = this.hashCredentials(password);
-
-            return storedHashedCredentials === enteredHashedCredentials;
+            return true;
         } catch (error) {
             return false;
         }
-
-    }
-
-    hashCredentials(password: string): string {
-        const bitArray = sjcl.hash.sha256.hash(password);
-        const hashedCredentials = sjcl.codec.hex.fromBits(bitArray);
-
-        return hashedCredentials;
     }
 }

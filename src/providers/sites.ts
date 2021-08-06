@@ -1591,6 +1591,17 @@ export class CoreSitesProvider {
         });
     }
 
+    async offlineLogin(siteId: string): Promise<any> {
+        const site = await this.getSite(siteId);
+        const newValues = {
+            loggedOut: 0,
+        };
+
+        site.setLoggedOut(false);
+        await this.appDB.updateRecords(CoreSitesProvider.SITES_TABLE, newValues, { id: siteId });
+        return this.login(siteId);
+    }
+
     /**
      * Updates a site's token using siteId.
      *

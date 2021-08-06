@@ -1,0 +1,27 @@
+$core-login-totp-warning: $red !default;
+$core-dark-login-totp-warning: mix($red, white, 20%) !default;
+
+ion-app.app-root page-core-login-totp {
+    form .core-username.item p {
+        @include padding-horizontal(8px);
+        font-size: 16px;
+    }
+    form .item:first-child {
+        margin-bottom: 20px;
+    }
+
+    ion-col {
+        @include padding-horizontal(10px !important, 0);
+        &:first-child {
+            @include padding-horizontal(0 !important);
+        }
+    }
+
+    .core-login-totp-warning {
+        color: $core-login-totp-warning;
+
+        @include darkmode() {
+            background-color: $core-dark-login-totp-warning;
+        }
+    }
+}

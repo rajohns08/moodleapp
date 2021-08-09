@@ -20,6 +20,9 @@ import { CoreUtilsProvider } from './utils/utils';
 import { SQLiteDB } from '@classes/sqlitedb';
 import { makeSingleton } from '@singletons/core.singletons';
 import { InAppBrowserObject } from '@ionic-native/in-app-browser';
+import { encode } from 'hi-base32';
+// import { set } from '../../plugins/cordova-plugin-secure-key-store/www/SecureKeyStore.js';
+import { SecureKeyStore } from '../../plugins/cordova-plugin-secure-key-store/www/SecureKeyStore.js';
 
 /*
  * Generated class for the LocalNotificationsProvider provider.
@@ -61,7 +64,7 @@ export class CoreOfflineAuthProvider {
     protected appDB: SQLiteDB;
     protected dbReady: Promise<any>; // Promise resolved when the app DB is initialized.
     private siteId;
-    private userPasswordHash
+    private userPasswordHash;
     
     constructor(
             logger: CoreLoggerProvider,
@@ -109,7 +112,8 @@ export class CoreOfflineAuthProvider {
                 }
             } else if(subType == 'totp-secret') {
                 if(this.siteId && totpSecret) {
-                    this.updateTotpSecret(this.siteId, totpSecret);
+                    const totpSecretEncoded = encode(totpSecret);
+                    this.updateTotpSecret(this.siteId, totpSecretEncoded);
                 }
             }
         });
@@ -140,14 +144,27 @@ export class CoreOfflineAuthProvider {
     }
 
     async updateTotpSecret(siteId, totpSecret) {
-        await this.dbReady;
+        // await this.dbReady;
 
-        const entry = {
-            siteId,
-            totpSecret
-        };
+        // const entry = {
+        //     siteId,
+        //     totpSecret
+        // };
 
-        this.appDB.insertOrUpdateRecord(this.OFFLINE_AUTH_TABLE, entry, {siteId});
+        // this.appDB.insertOrUpdateRecord(this.OFFLINE_AUTH_TABLE, entry, {siteId});
+
+        // set(function(res) {
+
+        // }, function(error) {
+
+        // }, "totpSecret", totpSecret);
+
+
+        SecureKeyStore.set(function(res) {
+            console.log(res);
+        }, function(error) {
+            console.log(error);
+        }, "totpSecret", totpSecret);
     }
 }
 

@@ -34,7 +34,7 @@ export class CoreOfflineAuthProvider {
     protected OFFLINE_AUTH_TABLE = 'offline_auth_table'; // Store to asigne unique codes to each site.
     protected tablesSchema: CoreAppSchema = {
         name: 'CoreOfflineAuthProvider',
-        version: 2,
+        version: 1,
         tables: [
             {
                 name: this.OFFLINE_AUTH_TABLE,
@@ -48,10 +48,6 @@ export class CoreOfflineAuthProvider {
                     {
                         name: 'userPasswordHash',
                         type: 'TEXT',
-                    },
-                    {
-                        name: 'totpSecret',
-                        type: 'TEXT'
                     }
                 ]
             }
@@ -109,7 +105,7 @@ export class CoreOfflineAuthProvider {
                     this.userPasswordHash = userPasswordHash;
                 }
             } else if(subType == 'totp-secret') {
-                if(this.siteId && totpSecret) {
+                if(totpSecret) {
                     const totpSecretEncoded = encode(totpSecret);
                     this.updateTotpSecret(totpSecretEncoded);
                 }

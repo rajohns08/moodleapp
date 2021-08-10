@@ -20,6 +20,7 @@ import { CoreUtilsProvider } from './utils/utils';
 import { SQLiteDB } from '@classes/sqlitedb';
 import { makeSingleton } from '@singletons/core.singletons';
 import { InAppBrowserObject } from '@ionic-native/in-app-browser';
+import { encode } from 'hi-base32';
 
 /*
  * Generated class for the LocalNotificationsProvider provider.
@@ -33,7 +34,7 @@ export class CoreOfflineAuthProvider {
     protected OFFLINE_AUTH_TABLE = 'offline_auth_table'; // Store to asigne unique codes to each site.
     protected tablesSchema: CoreAppSchema = {
         name: 'CoreOfflineAuthProvider',
-        version: 2,
+        version: 1,
         tables: [
             {
                 name: this.OFFLINE_AUTH_TABLE,
@@ -47,10 +48,6 @@ export class CoreOfflineAuthProvider {
                     {
                         name: 'userPasswordHash',
                         type: 'TEXT',
-                    },
-                    {
-                        name: 'totpSecret',
-                        type: 'TEXT'
                     }
                 ]
             }
@@ -61,7 +58,7 @@ export class CoreOfflineAuthProvider {
     protected appDB: SQLiteDB;
     protected dbReady: Promise<any>; // Promise resolved when the app DB is initialized.
     private siteId;
-    private userPasswordHash
+    private userPasswordHash;
     
     constructor(
             logger: CoreLoggerProvider,
@@ -108,8 +105,9 @@ export class CoreOfflineAuthProvider {
                     this.userPasswordHash = userPasswordHash;
                 }
             } else if(subType == 'totp-secret') {
-                if(this.siteId && totpSecret) {
-                    this.updateTotpSecret(this.siteId, totpSecret);
+                if(totpSecret) {
+                    const totpSecretEncoded = encode(totpSecret);
+                    this.updateTotpSecret(totpSecretEncoded);
                 }
             }
         });
@@ -139,15 +137,13 @@ export class CoreOfflineAuthProvider {
 
     }
 
-    async updateTotpSecret(siteId, totpSecret) {
-        await this.dbReady;
-
-        const entry = {
-            siteId,
-            totpSecret
-        };
-
-        this.appDB.insertOrUpdateRecord(this.OFFLINE_AUTH_TABLE, entry, {siteId});
+    async updateTotpSecret(totpSecret) {
+        const win = <any> window;
+        win.cordova.plugins.SecureKeyStore.set(function(res) {
+            console.log(res);
+        }, function(error) {
+            console.log(error);
+        }, "totpSecret", totpSecret);
     }
 }
 
